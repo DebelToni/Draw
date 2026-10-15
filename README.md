@@ -1,0 +1,46 @@
+# Draw
+
+A personal iPad/PencilKit notebook with manual Sync, a Python sync/rendering backend, and page-writing AI agents through a custom Pi integration.
+
+This is a **reference implementation, shared as-is**, not a general-purpose product or a supported installation package. It reflects one person's hardware, workflow and preferences. Take the parts you want and have your agents adapt them to your own setup. No extensibility refactor or portability layer was added for this release.
+
+The AI integration uses a customized Pi harness, including its package imports, lifecycle hooks and launch flags. It is not claimed to work unchanged with upstream Pi. Server addresses and Apple signing identifiers in this snapshot are privacy placeholders, not live services or working credentials. Personal conversations, deployment diaries, note data, runtime workspaces, credentials, provisioning profiles and signed apps are not included. This repository starts with a fresh history.
+
+## Code map
+
+- `Draw/`: UIKit/PencilKit app, local combined-state history, manual Sync and AI capture/application.
+- `DrawTests/`, `DrawUITests/`: native tests and isolated fixtures.
+- `server/`: authenticated incremental Sync, portable drawing rendering, read-only page API and current-state backup.
+- `notes_service/`: persistent Pi workers, request lifecycle, immutable assets and guarded rendering/approval.
+- `benchmarks/`: isolated latency/quality evaluation tooling; private cases and results are excluded.
+
+Xcode project: `Draw.xcodeproj`; XcodeGen input: `project.yml`. See [server/README.md](server/README.md), [ai-assistance.md](ai-assistance.md), [notes-agents.md](notes-agents.md) and [notes_service/README.md](notes_service/README.md) for the implemented contracts. These are architecture/reference notes, not a promise of a turnkey setup. Use your own signing configuration, endpoints, credentials and Pi environment.
+
+## Included
+
+- Documents, rename, creation and last-modified date. Opening a document resumes its last page. Home supports nested folders: create/open/rename/delete inside the current folder, move documents or folders using their ellipsis menus, and navigate back to the containing folder. Move destinations use full paths and exclude the moved folder and its descendants. Deleting a folder moves its direct documents and child folders to its parent (Home for a root folder), without deleting ink or flattening its child trees. Folder membership and empty folders persist, sync and appear in the agent API.
+- Manual incremental Sync to DGX over Tailscale HTTPS, with confirmed success, explicit failure and conflict protection. Current active/deleted page heads are preserved; undo stays on the iPad within two successful-Sync windows. Only missing current SHA-addressed archives and portable scenes are sent, gzip-compressed. DGX generates page composites; v2 does not upload those full-page previews, while format 2 includes the generated object PNG assets. Private `Draw-data` retains editable native archives, portable JSON and readable PNGs. Protocol, measured transfer sizes and rendering limits: [portable-sync.md](portable-sync.md). Operation/API/recovery: [server/README.md](server/README.md).
+- Home → Settings → Toolbar position: Bottom (default), Top, Right or Left. Saved across launches, applied when opening a page. Horizontal edges use one row; vertical edges use one column with upright icons in the same order. Existing ink is uniformly fitted without changing saved coordinates; the drawable paper extends to every remaining edge instead of letterboxing. Ink made in that extra space is fitted on reopening at another toolbar edge. The fit is fixed while a page is open: drawing, undo/redo and branch traversal never change its scale or origin. No interactive zoom or pan.
+- The drawing canvas suppresses accidental editing outside Selection mode while retaining Pencil drawing. Selection explicitly permits native editing gestures/menus; switching away ends editing and restores long-press suppression. Document-name text fields retain normal text editing.
+- Pencil-only monoline ink. Eight colors include light blue, saturated ink blue (`#0033CC`) and purple Question (`#AF52DE`, `?` badge), meaning any question, unfinished/missed material or item to revisit. The upgrade removes teal Missed, converts its current strokes to purple and resets incompatible old undo while preserving current page state. Earlier palette indices 0–7 stay unchanged; startup color now resets to Ink blue rather than restoring a saved palette index. Synced native colors derive the `question` tag. Pen widths: 0.5–6 pt in 0.5 pt steps, then 7–12 pt in 1 pt steps; 18 bounded sizes, with startup pen index `[1]` (1 pt) and Ink blue `#0033CC` on every launch. Palette/width changes remain available throughout the session; the selected tool still restores normally. New index `[0]` is PencilKit's 0.5 pt minimum; the previous minimum of 1 pt is now `[1]`.
+- Native highlighter with independent thickness: 8–30 pt in 2 pt steps, then 35–60 pt in 5 pt steps, initially 20 pt. A color click with selected ink recolors it and remains in Selection on iPadOS 27; otherwise it returns to the last pen/highlighter tool. Native lasso selects, moves and deletes ink through the existing drawing history without opening the keyboard or predictive strip. Ruler toggles Apple's guide and permits its native finger manipulation without globally re-enabling editing gestures; Selection or leaving the page turns it off, and quick erasing temporarily suspends it. See [native-tools.md](native-tools.md).
+- One-contact quick eraser only; the persistent Object eraser was removed. Old saved eraser mode restores the last ink tool. Apple Pencil Pro squeeze arms quick eraser through `UIPencilInteraction`; after that contact it always returns to Pen, preserving its independent width and selected color. A squeeze during drawing queues it for the next contact. Double-tap is available through the same API but has no custom binding yet.
+- Blank/dots/lines/grid paper with 36 pt spacing. Each redraw replaces the previous pattern on opaque white; resizing regenerates the pattern rather than stretching cached pixels. Starred pages, insert page to the right, page navigation.
+- 3×3 page overview with nine-page batches, including Deleted pages. Long-press a page to select it for duplication to its left, moving or deletion. Deleted pages remain in that document's Deleted view and can be restored.
+- Carry to next page: the overlapping-pages icon (`doc.on.doc`) immediately after Redo. Arm the toolbar button, then tap the page with Pencil or a finger to choose a horizontal Y cut. Duplicate whole ink strokes and AI objects touching or below that cut onto a new page immediately after the source, shifted so the cut becomes the top edge. Crossing objects keep their hidden negative-Y portion rather than being trimmed or refitted into view. The source stays intact; the new page keeps its paper, and a second button tap cancels selection.
+- Device-local branching history per page. Undo then drawing retains branches within the rolling local window; Redo follows the selected branch. The unused `g−`/`g+` buttons are hidden for now; retained branches and their source/history remain unchanged. Each confirmed Sync discards undo older than the previous confirmed Sync. Two Syncs without edits clear older undo; failed Sync does not. Nonblank floors remain nonblank. Page reordering/deletion is not drawing undo. Remote versions are not retained; see [local-undo.md](local-undo.md).
+- Each completed drawing change is written as a PencilKit snapshot before the history index is atomically updated. Pending changes also flush when the app backgrounds or leaves the page. There is no background thumbnailing or sync in the Pencil path.
+- One AI button captures the current page/document context for its persistent unlisted Pi worker. Replies are black static typeset objects on the paper; follow-ups are handwriting/circles plus another button press. Native ink remains above generated content, and page-only responses do not create a chat/result panel. Ordinary per-page Undo handles combined ink/object state. See [ai-assistance.md](ai-assistance.md), [notes-agents.md](notes-agents.md) and the [assistance API](notes_service/README.md).
+
+## Deliberate v0 gaps
+
+V1 generated content intentionally has no individual editing controls; use ordinary Undo or a handwritten follow-up. Disclosed stale terminal previews support additions only until fresh native context is available.
+
+Standalone export/import UI, a visual branch browser and battery measurements are pending. Deleting the app deletes unsynced local documents. Manual DGX sync plus the separate private GitHub data backup is Anton's chosen recovery workflow. Snapshot-per-change storage can still grow between successful Syncs.
+
+Run the `Draw` scheme's tests in Xcode on an iPad simulator. App code lives in `Draw/`; store/canvas-layout tests and UI smoke tests live in `DrawTests/` and `DrawUITests/`.
+
+
+## License
+
+Original project code is released under the [MIT License](LICENSE). Bundled Liberation Serif fonts retain their [SIL Open Font License](notes_service/rendering/fonts/Liberation-LICENSE.txt). Dependencies retain their own licenses.

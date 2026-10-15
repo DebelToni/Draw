@@ -1,0 +1,12 @@
+[Unit]
+Description=Back up synced Draw data to private GitHub repository
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/Draw
+Environment=DRAW_SYNC_STATE=%h/.local/state/draw-sync
+Environment=DRAW_SYNC_BACKUP_REPO=%h/.local/state/draw-sync/backup-repo
+ExecStart=%h/projects/Draw/.venv/bin/python server/backup.py
+UMask=0077
+NoNewPrivileges=true

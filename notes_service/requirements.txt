@@ -1,0 +1,2 @@
+-r ../server/requirements.txt
+aiohttp==3.13.3

@@ -1,0 +1,18 @@
+[Unit]
+Description=Draw document notes manager and interactive Pi bridge
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/Draw
+ExecStart=%h/projects/Draw/.venv/bin/python -m notes_service --port 18881
+Environment=HOME=%h
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+Restart=on-failure
+RestartSec=5
+# Deliberately outside draw-sync's old filesystem sandbox: full normal global Pi,
+# tmux and owner HOME access are required. Never disable tools or global extensions.
+
+[Install]
+WantedBy=default.target

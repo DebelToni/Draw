@@ -1,0 +1,58 @@
+name: Draw
+options:
+  bundleIdPrefix: com.debeltoni
+  deploymentTarget:
+    iOS: '26.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    TARGETED_DEVICE_FAMILY: '2'
+    SUPPORTS_MACCATALYST: NO
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: YOURTEAMID
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UIRequiresFullScreen: YES
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeRight"
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+targets:
+  Draw:
+    type: application
+    platform: iOS
+    sources: [Draw]
+    info:
+      path: Draw/Info.plist
+      properties:
+        DrawSyncToken: $(DRAW_SYNC_TOKEN)
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.debeltoni.Draw
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleDefault
+  DrawUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [DrawUITests]
+    dependencies:
+      - target: Draw
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.debeltoni.DrawUITests
+        GENERATE_INFOPLIST_FILE: YES
+  DrawTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [DrawTests]
+    dependencies:
+      - target: Draw
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.debeltoni.DrawTests
+        GENERATE_INFOPLIST_FILE: YES

@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for newly synced Draw notes to back up
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Unit=draw-backup.service
+
+[Install]
+WantedBy=timers.target

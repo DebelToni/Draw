@@ -1,0 +1,18 @@
+[Unit]
+Description=Draw manual notebook sync
+After=network.target
+
+[Service]
+WorkingDirectory=%h/projects/Draw
+Environment=DRAW_SYNC_STATE=%h/.local/state/draw-sync
+ExecStart=%h/projects/Draw/.venv/bin/python server/server.py
+Restart=on-failure
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/state/draw-sync
+
+[Install]
+WantedBy=default.target
